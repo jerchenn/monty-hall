@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Monty Hall Simulator</title>
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Option A · Pink Wall, Four Stations. GBH tokens (faded tier). Base pink #E3A6AC ≥45%; green-family accent; deep rose-red text;
+   T-Progress: one central axis with gold nodes, four stations (play · record · simulate · argue). Single-theme by the skill's palette. */
+:root{
+  --canvas:#E3A6AC; --canvas-lt:#E9B4B9; --canvas-dk:#D99AA1; --pink:#E3A6AC;
+  --surface:#9FB295; --surface-lt:#B8C6AE; --stroke:#637040;
+  --text:#A34860; --mauve:#BFA0AC; --mauve-lt:#DFCBD2; --trim:#C8A030; --trim-dk:#9A7B24;
+  --neutral:#F0E8D8; --label-bg:#FAF4E8; --butter:#F4DBB2; --paper:#EFE4DA;
+  --ink:#2C1F14; --ink-warm:#6E5140; --ink-lt-d:#C9B896; --rule:#D8C8A0;
+  --display:"Cormorant Garamond","Cormorant",Garamond,"Times New Roman",serif;
+  --mono:"IBM Plex Mono","Courier New",monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);background-image:linear-gradient(172deg,var(--canvas-lt) 0%,var(--canvas) 55%,var(--canvas-dk) 100%);color:var(--ink);font-family:var(--display);font-size:19px;line-height:1.5;padding-block:36px 0;padding-inline:16px;position:relative}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.08;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cg fill='none' stroke='%239A7B24' stroke-width='3'%3E%3Ccircle cx='30' cy='18' r='11'/%3E%3Ccircle cx='30' cy='42' r='11'/%3E%3Ccircle cx='18' cy='30' r='11'/%3E%3Ccircle cx='42' cy='30' r='11'/%3E%3C/g%3E%3C/svg%3E");background-size:60px 60px}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;mix-blend-mode:multiply;opacity:.06;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E")}
+.wrap{position:relative;z-index:1;max-width:920px;margin:0 auto;display:grid;gap:0;justify-items:center;text-align:center}
+.wrap>*{width:100%}
+h1,h2,h3{font-family:var(--display);font-weight:300;line-height:1.1;text-wrap:balance;margin:0;text-transform:uppercase;letter-spacing:.18em;color:var(--text)}
+h1{font-size:clamp(2.4rem,7vw,4.4rem);letter-spacing:.26em;padding-left:.26em}
+h2{font-size:1.7rem}
+h3{font-size:1.2rem;letter-spacing:.14em}
+p{margin:0 auto;max-width:60ch}
+.aux{font-size:.95rem;color:var(--ink-warm);font-style:italic}
+.tag{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;border:1px solid var(--trim);color:var(--text);padding:3px 10px;border-radius:999px;background:var(--label-bg);display:inline-block}
+.sign{display:inline-block;background:var(--text);color:var(--neutral);border:1px solid var(--trim);border-radius:999px;padding:6px 20px;font-size:.9rem;letter-spacing:.24em;text-transform:uppercase}
+.orn{color:var(--trim);letter-spacing:.6em;padding-left:.6em;font-size:.95rem}
+.line{display:flex;align-items:center;justify-content:center;gap:12px;color:var(--trim)}
+.line::before,.line::after{content:"";width:min(120px,22vw);height:1px;background:var(--rule)}
+
+/* progress axis: nodes between stations */
+.node{display:grid;justify-items:center;gap:0;padding-block:26px}
+.node .stem{width:1px;height:28px;background:var(--trim)}
+.node .dot{width:11px;height:11px;background:var(--trim);transform:rotate(45deg);margin:6px 0}
+.node .tag{margin-top:6px}
+
+/* gilded cabinets */
+.frame{position:relative;background:var(--neutral);border:1px solid var(--trim);border-radius:14px;padding:26px 22px 28px}
+.frame::after{content:"";position:absolute;inset:6px;border:1px solid var(--trim);border-radius:9px;pointer-events:none}
+.frame.mint{background:var(--surface);background-image:radial-gradient(ellipse at 50% 42%,transparent 45%,rgba(44,31,20,.10) 100%)}
+.frame.butter{background:var(--butter)}
+.frame.cream{background:var(--neutral)}
+.frame.beige{background:var(--label-bg)}
+.frame>*{position:relative;z-index:1}
+.frame{display:grid;gap:16px;justify-items:center}
+
+/* title cabinet */
+.hero{width:100%;max-width:760px;aspect-ratio:1400/634;overflow:hidden;border:1px solid var(--trim);border-radius:10px;position:relative;background:var(--mauve-lt)}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.hero::after{content:"";position:absolute;inset:7px;border:1px solid var(--trim);border-radius:6px;pointer-events:none}
+.title{display:grid;gap:2px;justify-items:center}
+.title .small{font-size:clamp(.9rem,2.2vw,1.2rem);letter-spacing:.5em;padding-left:.5em;color:var(--text);text-transform:uppercase;font-weight:300}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{font:inherit;font-size:.86rem;letter-spacing:.2em;text-transform:uppercase;padding:9px 20px;border:1px solid var(--trim);background:var(--label-bg);color:var(--text);cursor:pointer;border-radius:999px;font-weight:400}
+.btn:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+.btn[aria-pressed="true"],.btn.primary{background:var(--text);color:var(--neutral)}
+.btn.stay{background:var(--surface)} .btn.switch{background:var(--butter)}
+.btn:disabled{opacity:.45;cursor:default}
+.panel{display:grid;gap:10px;justify-items:center;max-width:680px;margin:0 auto;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:14px 6px}
+.panel ol{margin:0;padding:0;list-style:none;display:grid;gap:8px;max-width:58ch;text-align:left}
+.panel ol li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline}
+.panel ol li::before{content:"✦";color:var(--trim);font-size:.8rem}
+
+/* stage */
+.doors{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,3.5vw,32px);width:100%;max-width:660px}
+.door{position:relative;aspect-ratio:3/5;max-width:100%;border:1px solid var(--trim);padding:0;background:var(--trim-dk);cursor:pointer;font:inherit;color:inherit;overflow:hidden;border-radius:14px}
+.door:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+.door:disabled{cursor:default}
+.door .leaf{position:absolute;inset:5px;background:var(--surface-lt);border-radius:10px;display:grid;place-items:center;transition:transform .6s cubic-bezier(.7,0,.3,1);z-index:2;overflow:hidden}
+#door1 .leaf{background:var(--butter)} #door2 .leaf{background:var(--mauve-lt)}
+.door .leaf::before{content:"";position:absolute;inset:10px;border:1px solid var(--trim);border-radius:7px}
+.door .leaf::after{content:"";position:absolute;inset:22px 20px;border:1px solid var(--trim);border-radius:999px 999px 5px 5px;opacity:.7}
+.door .num{position:relative;z-index:1;width:46%;aspect-ratio:1;border-radius:50%;background:var(--label-bg);border:1px solid var(--trim);display:grid;place-items:center;font-size:clamp(1.6rem,6vw,3rem);font-weight:300;color:var(--text)}
+.door.open .leaf{transform:translateY(-104%)}
+.door .prize{position:absolute;inset:5px;border-radius:10px;overflow:hidden;background:var(--neutral);z-index:1}
+.door .prize img{width:100%;height:100%;object-fit:cover;display:block}
+.door .prize .lbl{position:absolute;left:50%;top:12px;transform:translateX(-50%);font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;padding:3px 12px;background:var(--label-bg);color:var(--text);border:1px solid var(--trim);border-radius:999px}
+.door .tagline{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:3;font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;padding:4px 12px;background:var(--text);color:var(--neutral);border:1px solid var(--trim);border-radius:999px;white-space:nowrap}
+.door.chosen{outline:2px solid var(--text);outline-offset:3px}
+.prompt{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;min-height:44px;width:100%}
+.prompt .msg{flex:1 1 100%;min-width:0;font-size:1.15rem}
+.result{display:block;font-size:clamp(1.8rem,5vw,2.8rem);font-weight:300;letter-spacing:.3em;padding-left:.3em;text-transform:uppercase;color:var(--text);line-height:1.2;margin-bottom:4px}
+.result.lose{color:var(--ink-warm)}
+
+/* record pair */
+.ledger{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;align-items:stretch}
+@media (max-width:560px){.ledger{grid-template-columns:1fr}}
+.strat{position:relative;border:1px solid var(--trim);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px}
+.strat::after{content:"";position:absolute;inset:6px;border:1px solid var(--trim);border-radius:9px;pointer-events:none}
+.strat.stay{background:var(--neutral)} .strat.switch{background:var(--butter)}
+.rate{font-size:2.6rem;line-height:1;font-weight:300;color:var(--text);font-variant-numeric:tabular-nums}
+.bar{height:10px;width:100%;max-width:260px;background:var(--label-bg);position:relative;overflow:hidden;border:1px solid var(--rule);border-radius:999px}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--surface);transition:width .3s}
+.strat.switch .bar i{background:var(--text)}
+.bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--trim-dk)}
+
+/* simulator */
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+.row label{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text)}
+select{font:inherit;font-size:.95rem;padding:7px 12px;border:1px solid var(--trim);background:var(--label-bg);color:var(--ink);border-radius:999px;max-width:100%}
+canvas{width:100%;height:auto;display:block;border:1px solid var(--trim);border-radius:10px;background:var(--label-bg)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-warm)}
+.legend span::before{content:"";display:inline-block;width:20px;height:3px;vertical-align:middle;margin-right:7px;background:var(--ink-warm)}
+.legend .s::before{background:var(--stroke)} .legend .w::before{background:var(--text)}
+.legend .s2::before{height:0;border-top:3px dotted var(--stroke)} .legend .w2::before{height:0;border-top:3px dotted var(--text)}
+.legend .r::before{height:0;border-top:2px dashed var(--trim-dk)}
+table{border-collapse:separate;border-spacing:4px;font-size:.95rem;margin:0 auto;border:1px solid var(--trim);border-radius:10px;padding:6px;background:var(--neutral);font-variant-numeric:tabular-nums}
+th,td{text-align:center;padding:6px 12px;background:var(--label-bg);border-radius:6px}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-warm);font-weight:400;background:transparent}
+table.space td.st{background:var(--surface-lt);color:var(--ink)} table.space td.sw{background:var(--canvas-lt);color:var(--ink)}
+table.space th.r{text-align:right;letter-spacing:.1em}
+
+/* argument */
+.cases{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;align-items:stretch}
+@media (max-width:560px){.cases{grid-template-columns:1fr}}
+.case{position:relative;border:1px solid var(--trim);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px}
+.case::after{content:"";position:absolute;inset:6px;border:1px solid var(--trim);border-radius:9px;pointer-events:none}
+.case.one{background:var(--neutral)} .case.two{background:var(--butter)}
+.step{display:grid;gap:10px;justify-items:center;width:100%}
+.step p{max-width:60ch}
+.bayes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:720px}
+@media (max-width:620px){.bayes{grid-template-columns:1fr}}
+.bayes>div{display:grid;gap:8px;justify-items:center;border:1px solid var(--trim);border-radius:12px;padding:12px 10px 10px;background:var(--label-bg)}
+.bars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;height:140px;align-items:end;border-bottom:1px solid var(--rule)}
+.bars>div{display:grid;grid-template-rows:1fr auto auto;height:100%;justify-items:center;gap:2px}
+.bars i{align-self:end;width:64%;background:var(--surface);display:block;min-height:0;border-radius:4px 4px 0 0}
+.bars>div:nth-child(3) i{background:var(--text)} .bars>div:nth-child(2) i{background:var(--mauve)}
+.bars span{font-size:1rem;color:var(--text)}
+.bars small{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-warm)}
+.hundred{display:grid;grid-template-columns:repeat(20,1fr);gap:4px;max-width:520px;width:100%;margin:0 auto}
+.hundred button{aspect-ratio:1;background:var(--surface);border:1px solid var(--trim-dk);border-radius:50% 50% 3px 3px;display:block;padding:0;cursor:pointer;transition:background .25s}
+.hundred button:focus-visible{outline:2px solid var(--text);outline-offset:1px}
+.hundred button:disabled{cursor:default}
+.hundred button.pick{background:var(--text)} .hundred button.left{background:var(--trim)}
+.hundred button.gone{background:var(--mauve-lt);border-color:var(--rule)}
+.hundred button.car{background:var(--butter);border:2px solid var(--text)}
+@media (prefers-reduced-motion:reduce){.hundred button{transition:none}}
+.map{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;align-items:stretch}
+@media (max-width:640px){.map{grid-template-columns:1fr}}
+.map>div{border:1px solid var(--trim);border-radius:12px;background:var(--label-bg);padding:12px 12px 14px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;font-size:.95rem}
+.map .sign{font-size:.72rem;padding:4px 14px;letter-spacing:.18em}
+.closing{display:grid;gap:10px;justify-items:center;padding:14px 0 0}
+.closing .quote{font-style:italic;font-size:1.25rem;max-width:56ch;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:12px 6px;color:var(--ink)}
+.em{color:var(--text);white-space:nowrap}
+
+/* footer band: Accent Echo */
+footer{margin-top:34px;margin-inline:-16px;background:var(--text);color:var(--neutral);border-top:1px solid var(--trim);padding:18px 16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase}
+footer>:first-child{justify-self:start} footer>:nth-child(2){justify-self:center;color:var(--butter);letter-spacing:.5em;padding-left:.5em} footer>:last-child{justify-self:end}
+@media (max-width:560px){footer{grid-template-columns:1fr;gap:6px;text-align:center} footer>*{justify-self:center!important}}
+@media (prefers-reduced-motion:reduce){.door .leaf,.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+
+<header class="frame cream" aria-label="Title">
+  <div class="hero"><img src="img/village.webp" alt="A village square with bunting, pink benches, and goats wandering between pastel houses"></div>
+  <div class="title">
+    <div class="small">The problem of</div>
+    <h1>Monty Hall</h1>
+    <div class="orn">✦ · ✦</div>
+  </div>
+  <div class="tabs" role="group" aria-label="Information">
+    <button type="button" class="btn" id="tabRules" aria-pressed="true">Rules</button>
+    <button type="button" class="btn" id="tabAbout" aria-pressed="false">About</button>
+    <button type="button" class="btn" id="tabReset" aria-pressed="false">Reset</button>
+  </div>
+  <div class="panel" id="rules">
+    <ol>
+      <li>A car is placed at random behind one of three doors. Goats stand behind the other two.</li>
+      <li>You choose a door. It stays closed.</li>
+      <li>The host, who knows where the car is, opens one of the other two doors and always shows a goat. If both hold goats, he picks one at random.</li>
+      <li>You open your original door (stay) or the other closed door (switch). The car wins.</li>
+    </ol>
+  </div>
+  <div class="panel" id="about" hidden>
+    <p>Named after the host of the US game show Let's Make a Deal. Marilyn vos Savant gave the correct answer in Parade magazine in 1990 and received thousands of letters, many from people with PhDs, insisting she was wrong. Stats are stored only in this browser.</p>
+  </div>
+  <div class="panel" id="resetPanel" hidden>
+    <p>Clears every hand-played and simulated round.</p>
+    <div class="row"><button type="button" class="btn primary" id="resetYes">Clear everything</button><button type="button" class="btn" id="resetNo">Keep them</button></div>
+  </div>
+</header>
+
+<div class="node"><div class="stem"></div><div class="dot"></div><span class="tag">Station I · Play</span></div>
+
+<section class="frame mint" aria-label="Game">
+  <span class="sign">The three doors</span>
+  <div class="doors" id="doors">
+    <button type="button" class="door" id="door0" aria-label="Door 1"><div class="prize"><img alt=""><span class="lbl"></span></div><div class="leaf"><span class="num">1</span></div></button>
+    <button type="button" class="door" id="door1" aria-label="Door 2"><div class="prize"><img alt=""><span class="lbl"></span></div><div class="leaf"><span class="num">2</span></div></button>
+    <button type="button" class="door" id="door2" aria-label="Door 3"><div class="prize"><img alt=""><span class="lbl"></span></div><div class="leaf"><span class="num">3</span></div></button>
+  </div>
+  <div class="prompt">
+    <div class="msg" id="msg" aria-live="polite">Choose a door.</div>
+    <button type="button" class="btn stay" id="btnStay" hidden>Stay</button>
+    <button type="button" class="btn switch" id="btnSwitch" hidden>Switch</button>
+    <button type="button" class="btn primary" id="btnAgain" hidden>Play again</button>
+  </div>
+</section>
+
+<div class="node"><div class="stem"></div><div class="dot"></div><span class="tag">Station II · Record</span></div>
+
+<section class="frame beige" aria-label="Your stats">
+  <span class="sign">Your record</span>
+  <div class="ledger">
+    <div class="strat stay">
+      <h3>Stay</h3>
+      <div class="rate" id="stayRate">–</div>
+      <div class="bar"><i id="stayBar" style="width:0"></i></div>
+      <div class="aux" id="stayMeta">0 wins · 0 losses</div>
+    </div>
+    <div class="strat switch">
+      <h3>Switch</h3>
+      <div class="rate" id="switchRate">–</div>
+      <div class="bar"><i id="switchBar" style="width:0"></i></div>
+      <div class="aux" id="switchMeta">0 wins · 0 losses</div>
+    </div>
+  </div>
+</section>
+
+<div class="node"><div class="stem"></div><div class="dot"></div><span class="tag">Station III · Simulate</span></div>
+
+<section class="frame butter" aria-label="Bulk simulation">
+  <span class="sign">Let the machine play</span>
+  <p class="aux">Choose the host's rule and run the rounds. The chart tracks the cumulative win rate for each strategy under each rule.</p>
+  <div class="row">
+    <label for="hostRule">Host</label>
+    <select id="hostRule"><option value="knows" selected>Knows the car, never opens it</option><option value="random">Opens at random; rounds that reveal the car are discarded</option></select>
+    <label for="nRounds">Rounds</label>
+    <select id="nRounds"><option>100</option><option selected>1000</option><option>10000</option><option>100000</option></select>
+    <button type="button" class="btn primary" id="btnSim">Run</button>
+    <button type="button" class="btn" id="btnSimClear">Clear</button>
+  </div>
+  <canvas id="chart" width="1200" height="520" aria-label="Cumulative win rate by strategy and host rule"></canvas>
+  <div class="legend"><span class="s">Stay, host knows</span><span class="w">Switch, host knows</span><span class="s2">Stay, random host</span><span class="w2">Switch, random host</span><span class="r" id="legRef" hidden>1/3, 1/2, and 2/3</span></div>
+  <div style="overflow-x:auto;max-width:100%">
+  <table id="simTable">
+    <thead><tr><th>Host</th><th>Strategy</th><th>Rounds</th><th>Wins</th><th>Win rate</th><th>95% CI</th></tr></thead>
+    <tbody>
+      <tr><td>Knows</td><td>Stay</td><td id="sN1">0</td><td id="sW1">0</td><td id="sR1">–</td><td id="sC1">–</td></tr>
+      <tr><td>Knows</td><td>Switch</td><td id="sN2">0</td><td id="sW2">0</td><td id="sR2">–</td><td id="sC2">–</td></tr>
+      <tr><td>Random</td><td>Stay</td><td id="sN3">0</td><td id="sW3">0</td><td id="sR3">–</td><td id="sC3">–</td></tr>
+      <tr><td>Random</td><td>Switch</td><td id="sN4">0</td><td id="sW4">0</td><td id="sR4">–</td><td id="sC4">–</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<div class="node"><div class="stem"></div><div class="dot"></div><span class="tag">Station IV · Argue</span></div>
+
+<section class="frame cream" aria-label="Why the host matters">
+  <span class="sign">Why the host matters</span>
+
+  <div class="step">
+    <h3>The first intuition</h3>
+    <p>After the host opens a goat, two doors remain, so the common guess is 1/2 each and switching changes nothing. That guess treats the two closed doors as symmetric. One was chosen by you; the other was left closed by a host who <span class="em">knew where the car was</span>.</p>
+  </div>
+
+  <div class="cases">
+    <div class="case one">
+      <span class="tag">Case I · one time in three</span>
+      <h3>The first pick is the car</h3>
+      <p>Both other doors hold goats, so the host may open either. Staying wins.</p>
+    </div>
+    <div class="case two">
+      <span class="tag">Case II · two times in three</span>
+      <h3>The first pick is a goat</h3>
+      <p>The host must open the only other goat, and the door he leaves closed is the car. Switching wins.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <h3>The sample space</h3>
+    <p class="aux">Nine equally likely combinations of car position and first pick.</p>
+    <div style="overflow-x:auto;max-width:100%">
+    <table class="space">
+      <thead><tr><th></th><th>Pick 1</th><th>Pick 2</th><th>Pick 3</th></tr></thead>
+      <tbody>
+        <tr><th class="r">Car behind 1</th><td class="st">stay wins</td><td class="sw">switch wins</td><td class="sw">switch wins</td></tr>
+        <tr><th class="r">Car behind 2</th><td class="sw">switch wins</td><td class="st">stay wins</td><td class="sw">switch wins</td></tr>
+        <tr><th class="r">Car behind 3</th><td class="sw">switch wins</td><td class="sw">switch wins</td><td class="st">stay wins</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="step">
+    <h3>Updating beliefs on the evidence</h3>
+    <p>Let A be the event that the car is behind your door and B the event that the host opens the door he opens. P(A | B) = P(B | A) P(A) / P(B). If the car is behind your door the host chooses between two goats, so P(B | A) = 1/2. If the car is behind the other closed door he had no choice, so the likelihood is 1. Equal priors and likelihoods of 1/2 against 1 give posterior odds of <span class="em">1 against 2</span>.</p>
+    <div class="bayes">
+      <div><span class="tag">Prior</span><div class="bars"><div><i style="height:33.3%"></i><span>1/3</span><small>Yours</small></div><div><i style="height:33.3%"></i><span>1/3</span><small>Opened</small></div><div><i style="height:33.3%"></i><span>1/3</span><small>Other</small></div></div></div>
+      <div><span class="tag">Posterior · host knows</span><div class="bars"><div><i style="height:33.3%"></i><span>1/3</span><small>Yours</small></div><div><i style="height:0"></i><span>0</span><small>Opened</small></div><div><i style="height:66.7%"></i><span>2/3</span><small>Other</small></div></div></div>
+      <div><span class="tag">Posterior · random host</span><div class="bars"><div><i style="height:50%"></i><span>1/2</span><small>Yours</small></div><div><i style="height:0"></i><span>0</span><small>Opened</small></div><div><i style="height:50%"></i><span>1/2</span><small>Other</small></div></div></div>
+    </div>
+    <p>A host who opens one of the other doors at random, and happens to show a goat, had a 1/2 chance of that reveal whichever closed door holds the car. The likelihoods are equal, the posterior equals the prior, and 1/2 each is then correct. Same observation, different rule, different answer.</p>
+  </div>
+
+  <div class="step">
+    <h3>The same game with 100 doors</h3>
+    <p class="aux" id="hMsg" aria-live="polite">One car among 100 doors. Choose one.</p>
+    <div class="hundred" id="hundred" role="group" aria-label="One hundred doors"></div>
+    <div class="row">
+      <button type="button" class="btn stay" id="hStay" hidden>Stay</button>
+      <button type="button" class="btn switch" id="hSwitch" hidden>Switch</button>
+      <button type="button" class="btn primary" id="hAgain" hidden>Play again</button>
+    </div>
+    <p>Your door holds the car 1 time in 100. The host had to step around the car 98 times, so the one door he left shut carries the other 99. With three doors the same rule applies; the host only steps around the car once, so the intuition fails.</p>
+  </div>
+
+  <div class="line"><span class="orn">✦</span></div>
+
+  <div class="step">
+    <span class="tag">The bridge</span>
+    <h3>The same lesson in causal research</h3>
+    <p>In observational research the host is whatever assigns people to a treatment: their own choices, an institution, a geography, or a policy threshold. A randomised trial is the random host, and the raw comparison is correct. Outside a trial the assignment rule is tied to the outcome, and the analyst has to state the rule and use the rule. That statement is <span class="em">the identification assumption</span>. Parallel trends in difference-in-differences, the exclusion restriction in instrumental variables, continuity at the cutoff in regression discontinuity, and the donor-pool assumption in synthetic control are each a claim about the host.</p>
+    <div class="map">
+      <div><span class="sign">Car location</span><span>True potential outcomes, never fully observed</span></div>
+      <div><span class="sign">Your first pick</span><span>The naive comparison of raw means</span></div>
+      <div><span class="sign">The host</span><span>The assignment or selection mechanism</span></div>
+      <div><span class="sign">The host's rule</span><span>The identification assumption</span></div>
+      <div><span class="sign">The opened door</span><span>The observed data</span></div>
+      <div><span class="sign">Random host</span><span>Randomised assignment, where the naive comparison is right</span></div>
+      <div><span class="sign">Switching</span><span>The adjusted estimator that uses the mechanism</span></div>
+      <div><span class="sign">100 doors</span><span>Strong selection: the observed pattern reflects the truth more closely</span></div>
+      <div><span class="sign">Convergence to 2/3</span><span>A Monte Carlo check of an identification strategy</span></div>
+    </div>
+    <div class="closing">
+      <div class="quote">No number of plays distinguishes the knowing host from the random host. The rule is learned from knowledge of the institution, which is why design settles identification and sample size does not. A knowing host never opens the car, and pre-trend tests, placebo cutoffs, and balance tables cannot prove the assumption, but they can expose a host who breaks the rule.</div>
+    </div>
+  </div>
+</section>
+
+<footer><span>Quantitative methods</span><span>✦ · ✦</span><span>University of Cambridge</span></footer>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const doors=[0,1,2].map(i=>$('door'+i));
+  const msg=$('msg'), btnStay=$('btnStay'), btnSwitch=$('btnSwitch'), btnAgain=$('btnAgain');
+  const GOATS=['img/goat_ram.webp','img/goat_alley.webp'], CAR='img/car.webp';
+  let car, picked, opened, phase='pick', goatPic=[];
+
+  let stats={stayW:0,stayL:0,switchW:0,switchL:0};
+  try{ const s=localStorage.getItem('mh-stats'); if(s) stats=Object.assign(stats,JSON.parse(s)); }catch(e){}
+  function saveStats(){ try{ localStorage.setItem('mh-stats',JSON.stringify(stats)); }catch(e){} }
+  const fmtPct=x=>(100*x).toFixed(1)+'%';
+  function renderStats(){
+    const sN=stats.stayW+stats.stayL, wN=stats.switchW+stats.switchL;
+    $('stayRate').textContent=sN?fmtPct(stats.stayW/sN):'–';
+    $('switchRate').textContent=wN?fmtPct(stats.switchW/wN):'–';
+    $('stayBar').style.width=sN?(100*stats.stayW/sN)+'%':'0';
+    $('switchBar').style.width=wN?(100*stats.switchW/wN)+'%':'0';
+    $('stayMeta').textContent=stats.stayW+' wins · '+stats.stayL+' losses';
+    $('switchMeta').textContent=stats.switchW+' wins · '+stats.switchL+' losses';
+  }
+
+  const rnd=n=>Math.floor(Math.random()*n);
+  function setDoor(i,{open=false,chosen=false,tag=''}={}){
+    const d=doors[i]; d.classList.toggle('open',open); d.classList.toggle('chosen',chosen);
+    const isCar=i===car, img=d.querySelector('.prize img');
+    if(open){ img.src=isCar?CAR:goatPic[i]; img.alt=isCar?'A pink convertible':'A goat'; } else { img.removeAttribute('src'); img.alt=''; }
+    d.querySelector('.lbl').textContent=open?(isCar?'Car':'Goat'):'';
+    let t=d.querySelector('.tagline'); if(tag){ if(!t){t=document.createElement('span');t.className='tagline';d.appendChild(t);} t.textContent=tag; } else if(t) t.remove();
+  }
+  function newRound(){
+    car=rnd(3); picked=null; opened=null; phase='pick';
+    const g=rnd(2), gd=[0,1,2].filter(j=>j!==car); goatPic=[]; goatPic[gd[0]]=GOATS[g]; goatPic[gd[1]]=GOATS[1-g];
+    doors.forEach((d,i)=>{ setDoor(i); d.disabled=false; });
+    msg.textContent='Choose a door.'; msg.className='msg';
+    btnStay.hidden=btnSwitch.hidden=btnAgain.hidden=true;
+  }
+  function pick(i){
+    if(phase!=='pick') return;
+    picked=i; phase='decide';
+    const goats=[0,1,2].filter(j=>j!==picked&&j!==car);
+    opened=goats[rnd(goats.length)];
+    const other=[0,1,2].find(j=>j!==picked&&j!==opened);
+    doors.forEach(d=>d.disabled=true);
+    setDoor(picked,{chosen:true,tag:'Your pick'});
+    setDoor(opened,{open:true});
+    msg.textContent='The host opens door '+(opened+1)+'. Stay with door '+(picked+1)+' or switch to door '+(other+1)+'?';
+    btnStay.hidden=btnSwitch.hidden=false;
+  }
+  function decide(strategy){
+    if(phase!=='decide') return;
+    phase='done';
+    const other=[0,1,2].find(j=>j!==picked&&j!==opened);
+    const final=strategy==='stay'?picked:other;
+    const win=final===car;
+    [0,1,2].forEach(i=>setDoor(i,{open:true,chosen:i===final,tag:i===final?(strategy==='stay'?'Stayed':'Switched'):''}));
+    if(strategy==='stay'){ win?stats.stayW++:stats.stayL++; } else { win?stats.switchW++:stats.switchL++; }
+    saveStats(); renderStats();
+    msg.innerHTML='<span class="result'+(win?'':' lose')+'">'+(win?'You win!':'You lose')+'</span>The car was behind door '+(car+1)+'.';
+    btnStay.hidden=btnSwitch.hidden=true; btnAgain.hidden=false; btnAgain.focus();
+  }
+  doors.forEach((d,i)=>d.addEventListener('click',()=>pick(i)));
+  btnStay.addEventListener('click',()=>decide('stay'));
+  btnSwitch.addEventListener('click',()=>decide('switch'));
+  btnAgain.addEventListener('click',newRound);
+
+  const panels={tabRules:'rules',tabAbout:'about',tabReset:'resetPanel'};
+  function showPanel(which){
+    Object.keys(panels).forEach(k=>{ $(k).setAttribute('aria-pressed',String(k===which)); $(panels[k]).hidden=(k!==which); });
+  }
+  Object.keys(panels).forEach(k=>$(k).addEventListener('click',()=>showPanel(k)));
+  $('resetNo').addEventListener('click',()=>showPanel('tabRules'));
+  $('resetYes').addEventListener('click',()=>{ stats={stayW:0,stayL:0,switchW:0,switchL:0}; saveStats(); renderStats(); clearSim(); showPanel('tabRules'); });
+
+  const blank=()=>({stay:[],sw:[],stayW:0,swW:0});
+  let sim={knows:blank(),random:blank()};
+  function playOne(strategy,rule){
+    for(;;){
+      const c=rnd(3), p=rnd(3);
+      const others=[0,1,2].filter(j=>j!==p);
+      let o;
+      if(rule==='knows'){ const goats=others.filter(j=>j!==c); o=goats[rnd(goats.length)]; }
+      else { o=others[rnd(2)]; if(o===c) continue; }
+      const other=others.find(j=>j!==o);
+      return (strategy==='stay'?p:other)===c;
+    }
+  }
+  function runSim(n){
+    const rule=$('hostRule').value, S=sim[rule], start=S.stay.length;
+    for(let k=0;k<n;k++){
+      if(playOne('stay',rule)) S.stayW++; if(playOne('switch',rule)) S.swW++;
+      const t=start+k+1; S.stay.push(S.stayW/t); S.sw.push(S.swW/t);
+    }
+    renderSim();
+  }
+  function clearSim(){ sim={knows:blank(),random:blank()}; renderSim(); }
+  function ci(w,n){ if(!n) return '–'; const p=w/n, se=Math.sqrt(p*(1-p)/n); return (p-1.96*se).toFixed(3)+' to '+(p+1.96*se).toFixed(3); }
+  function renderSim(){
+    [['knows',1,2],['random',3,4]].forEach(([rule,a,b])=>{
+      const S=sim[rule], n=S.stay.length;
+      $('sN'+a).textContent=n.toLocaleString(); $('sN'+b).textContent=n.toLocaleString();
+      $('sW'+a).textContent=S.stayW.toLocaleString(); $('sW'+b).textContent=S.swW.toLocaleString();
+      $('sR'+a).textContent=n?(S.stayW/n).toFixed(3):'–'; $('sR'+b).textContent=n?(S.swW/n).toFixed(3):'–';
+      $('sC'+a).textContent=ci(S.stayW,n); $('sC'+b).textContent=ci(S.swW,n);
+    });
+    drawChart();
+  }
+  const cv=$('chart'), ctx=cv.getContext('2d');
+  function token(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function drawChart(){
+    const W=cv.width,H=cv.height, L=90,R=30,T=30,B=70;
+    ctx.clearRect(0,0,W,H);
+    const fg=token('--text'), muted=token('--ink-warm'), line=token('--rule'), gold=token('--trim-dk');
+    const n=Math.max(sim.knows.stay.length,sim.random.stay.length,10);
+    const xmax=Math.log10(n);
+    const X=t=>L+(Math.log10(t))/(xmax||1)*(W-L-R);
+    const Y=p=>T+(1-p)*(H-T-B);
+    ctx.lineWidth=1; ctx.strokeStyle=line; ctx.fillStyle=muted; ctx.font='22px Cormorant Garamond, Garamond, serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+    [0,0.25,0.5,0.75,1].forEach(p=>{ ctx.beginPath(); ctx.moveTo(L,Y(p)); ctx.lineTo(W-R,Y(p)); ctx.stroke(); ctx.fillText(p.toFixed(2),L-10,Y(p)); });
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(let e=0;Math.pow(10,e)<=n;e++){ const t=Math.pow(10,e); ctx.beginPath(); ctx.moveTo(X(t),T); ctx.lineTo(X(t),H-B); ctx.stroke(); ctx.fillText(t.toLocaleString(),X(t),H-B+8); }
+    ctx.fillStyle=fg; ctx.fillText('Rounds played (log scale)',(L+W-R)/2,H-B+36);
+    ctx.save(); ctx.translate(22,(T+H-B)/2); ctx.rotate(-Math.PI/2); ctx.textBaseline='middle'; ctx.fillText('Cumulative win rate',0,0); ctx.restore();
+    const ran=sim.knows.stay.length>0||sim.random.stay.length>0; $('legRef').hidden=!ran;
+    if(ran){ ctx.setLineDash([8,6]); ctx.strokeStyle=gold; ctx.lineWidth=1.5;
+      [1/3,1/2,2/3].forEach(p=>{ ctx.beginPath(); ctx.moveTo(L,Y(p)); ctx.lineTo(W-R,Y(p)); ctx.stroke(); });
+      ctx.setLineDash([]); }
+    function series(arr,color,dotted){
+      if(arr.length<1) return; ctx.strokeStyle=color; ctx.lineWidth=3; ctx.setLineDash(dotted?[3,7]:[]); ctx.beginPath();
+      const step=Math.max(1,Math.floor(arr.length/2000));
+      for(let i=0;i<arr.length;i+=step){ const x=X(i+1),y=Y(arr[i]); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+      ctx.lineTo(X(arr.length),Y(arr[arr.length-1])); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle=color; ctx.beginPath(); ctx.arc(X(arr.length),Y(arr[arr.length-1]),6,0,Math.PI*2); ctx.fill();
+    }
+    series(sim.knows.stay,token('--stroke'),false); series(sim.knows.sw,token('--text'),false);
+    series(sim.random.stay,token('--stroke'),true); series(sim.random.sw,token('--text'),true);
+    if(!sim.knows.stay.length&&!sim.random.stay.length){ ctx.fillStyle=muted; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('Run a simulation to draw the convergence curves.',(L+W-R)/2,(T+H-B)/2); }
+  }
+  $('btnSim').addEventListener('click',()=>runSim(parseInt($('nRounds').value,10)));
+  $('btnSimClear').addEventListener('click',clearSim);
+
+  // ---- the 100-door game ----
+  const h=$('hundred'), hMsg=$('hMsg'), hStay=$('hStay'), hSwitch=$('hSwitch'), hAgain=$('hAgain');
+  const cells=[]; for(let i=0;i<100;i++){ const b=document.createElement('button'); b.type='button'; b.setAttribute('aria-label','Door '+(i+1)); b.addEventListener('click',()=>hPick(i)); h.appendChild(b); cells.push(b); }
+  let hCar, hPicked, hLeft, hPhase='pick', hTimers=[];
+  const quick=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function hReset(){
+    hTimers.forEach(clearTimeout); hTimers=[];
+    hCar=rnd(100); hPicked=null; hLeft=null; hPhase='pick';
+    cells.forEach(b=>{ b.className=''; b.disabled=false; });
+    hMsg.textContent='One car among 100 doors. Choose one.';
+    hStay.hidden=hSwitch.hidden=hAgain.hidden=true;
+  }
+  function hPick(i){
+    if(hPhase!=='pick') return;
+    hPhase='sweep'; hPicked=i; cells.forEach(b=>b.disabled=true); cells[i].classList.add('pick');
+    if(hCar===hPicked){ let r=rnd(99); if(r>=hPicked) r++; hLeft=r; } else hLeft=hCar;
+    const toOpen=[]; for(let j=0;j<100;j++) if(j!==hPicked&&j!==hLeft) toOpen.push(j);
+    for(let k=toOpen.length-1;k>0;k--){ const m=rnd(k+1); [toOpen[k],toOpen[m]]=[toOpen[m],toOpen[k]]; }
+    hMsg.textContent='The host opens 98 doors, every one a goat.';
+    const gap=quick?0:18;
+    toOpen.forEach((j,k)=>{ hTimers.push(setTimeout(()=>cells[j].classList.add('gone'),gap*k)); });
+    hTimers.push(setTimeout(()=>{
+      cells[hLeft].classList.add('left'); hPhase='decide';
+      hMsg.textContent='Two doors remain: your door '+(hPicked+1)+' and door '+(hLeft+1)+', which the host left shut. Stay or switch?';
+      hStay.hidden=hSwitch.hidden=false;
+    },gap*toOpen.length+(quick?0:300)));
+  }
+  function hDecide(strategy){
+    if(hPhase!=='decide') return;
+    hPhase='done';
+    const final=strategy==='stay'?hPicked:hLeft, win=final===hCar;
+    cells[hCar].classList.add('car');
+    hMsg.innerHTML='<span class="result'+(win?'':' lose')+'">'+(win?'You win!':'You lose')+'</span>The car was behind door '+(hCar+1)+'. '+(strategy==='stay'?'Staying wins 1 time in 100.':'Switching wins 99 times in 100.');
+    hStay.hidden=hSwitch.hidden=true; hAgain.hidden=false; hAgain.focus();
+  }
+  hStay.addEventListener('click',()=>hDecide('stay'));
+  hSwitch.addEventListener('click',()=>hDecide('switch'));
+  hAgain.addEventListener('click',hReset);
+  hReset();
+
+  renderStats(); renderSim(); newRound();
+})();
+</script>
+</body>
+</html>
