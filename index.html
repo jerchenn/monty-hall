@@ -66,12 +66,12 @@ p{margin:0 auto;max-width:60ch}
 .hero::after{content:"";position:absolute;inset:7px;border:1px solid var(--trim);border-radius:6px;pointer-events:none}
 .title{display:grid;gap:2px;justify-items:center}
 .title .small{font-size:clamp(.9rem,2.2vw,1.2rem);letter-spacing:.5em;padding-left:.5em;color:var(--text);text-transform:uppercase;font-weight:300}
-.tabbar{width:100%;max-width:680px;margin:0 auto;display:grid;justify-items:center}
-.tabs{display:flex;gap:0;justify-content:center;position:relative;z-index:1}
-.tab{font:inherit;font-size:.82rem;letter-spacing:.22em;text-transform:uppercase;padding:9px 22px 8px;border:1px solid var(--trim);border-bottom:0;background:var(--label-bg);color:var(--text);cursor:pointer;border-radius:12px 12px 0 0;margin-inline:-1px;position:relative;top:1px}
+.tabbar{width:100%;max-width:680px;margin:0 auto;display:grid;gap:14px;justify-items:center}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.tab{font:inherit;font-size:.86rem;letter-spacing:.2em;text-transform:uppercase;padding:9px 20px;border:1px solid var(--trim);background:var(--label-bg);color:var(--text);cursor:pointer;border-radius:999px}
 .tab[aria-selected="true"]{background:var(--text);color:var(--neutral)}
-.tab:focus-visible{outline:2px solid var(--text);outline-offset:2px}
-.tabpanel{width:100%;border:1px solid var(--trim);border-radius:12px;background:var(--label-bg);padding:16px 20px;display:grid;gap:10px;justify-items:center}
+.tab:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+.tabpanel{width:100%;display:grid;gap:10px;justify-items:center;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:14px 6px}
 .tabpanel ol{margin:0;padding:0;list-style:none;display:grid;gap:8px;max-width:58ch;text-align:left}
 .tabpanel ol li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline}
 .tabpanel ol li::before{content:"✦";color:var(--trim);font-size:.8rem}
