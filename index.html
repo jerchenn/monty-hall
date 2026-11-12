@@ -66,15 +66,19 @@ p{margin:0 auto;max-width:60ch}
 .hero::after{content:"";position:absolute;inset:7px;border:1px solid var(--trim);border-radius:6px;pointer-events:none}
 .title{display:grid;gap:2px;justify-items:center}
 .title .small{font-size:clamp(.9rem,2.2vw,1.2rem);letter-spacing:.5em;padding-left:.5em;color:var(--text);text-transform:uppercase;font-weight:300}
-.tabs{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.tabbar{width:100%;max-width:680px;margin:0 auto;display:grid;justify-items:center}
+.tabs{display:flex;gap:0;justify-content:center;position:relative;z-index:1}
+.tab{font:inherit;font-size:.82rem;letter-spacing:.22em;text-transform:uppercase;padding:9px 22px 8px;border:1px solid var(--trim);border-bottom:0;background:var(--label-bg);color:var(--text);cursor:pointer;border-radius:12px 12px 0 0;margin-inline:-1px;position:relative;top:1px}
+.tab[aria-selected="true"]{background:var(--text);color:var(--neutral)}
+.tab:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.tabpanel{width:100%;border:1px solid var(--trim);border-radius:12px;background:var(--label-bg);padding:16px 20px;display:grid;gap:10px;justify-items:center}
+.tabpanel ol{margin:0;padding:0;list-style:none;display:grid;gap:8px;max-width:58ch;text-align:left}
+.tabpanel ol li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline}
+.tabpanel ol li::before{content:"✦";color:var(--trim);font-size:.8rem}
 .btn{font:inherit;font-size:.86rem;letter-spacing:.2em;text-transform:uppercase;padding:9px 20px;border:1px solid var(--trim);background:var(--label-bg);color:var(--text);cursor:pointer;border-radius:999px;font-weight:400}
 .btn:focus-visible{outline:2px solid var(--text);outline-offset:3px}
 .btn[aria-pressed="true"],.btn.primary{background:var(--text);color:var(--neutral)}
 .btn:disabled{opacity:.45;cursor:default}
-.panel{display:grid;gap:10px;justify-items:center;max-width:680px;margin:0 auto;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:14px 6px}
-.panel ol{margin:0;padding:0;list-style:none;display:grid;gap:8px;max-width:58ch;text-align:left}
-.panel ol li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline}
-.panel ol li::before{content:"✦";color:var(--trim);font-size:.8rem}
 
 /* stage */
 .doors{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,3.5vw,32px);width:100%;max-width:660px}
@@ -174,27 +178,29 @@ footer>:first-child{justify-self:start} footer>:nth-child(2){justify-self:center
     <h1>Monty Hall</h1>
     <div class="orn">✦ · ✦</div>
   </div>
-  <div class="tabs" role="group" aria-label="Information">
-    <button type="button" class="btn" id="tabRules" aria-pressed="true">Rules</button>
-    <button type="button" class="btn" id="tabAbout" aria-pressed="false">About</button>
-    <button type="button" class="btn" id="tabReset" aria-pressed="false">Reset</button>
-  </div>
-  <div class="panel" id="rules">
-    <ol>
-      <li>A car is behind one of three doors. Goats are behind the other two.</li>
-      <li>Pick a door.</li>
-      <li>The host opens one door without the car.</li>
-      <li>Stay with your door or switch to the other closed one.</li>
-      <li>Find the car and you win.</li>
-    </ol>
-  </div>
-  <div class="panel" id="about" hidden>
-    <p>The puzzle takes its name from Monty Hall, host of the US game show Let's Make a Deal, where contestants chose between doors with prizes behind them. It became famous in 1990 when a reader put the question to Marilyn vos Savant, who answered a weekly puzzle column in Parade magazine. Her answer drew around ten thousand letters, close to a thousand from people with PhDs, most telling her she was wrong. She asked schools to play the game in class and send in the tallies, and the tallies settled the argument. Play, then decide who was right.</p>
-    <p class="aux">Stats are stored only in this browser.</p>
-  </div>
-  <div class="panel" id="resetPanel" hidden>
-    <p>Clears every hand-played and simulated round.</p>
-    <div class="row"><button type="button" class="btn primary" id="resetYes">Clear everything</button><button type="button" class="btn" id="resetNo">Keep them</button></div>
+  <div class="tabbar">
+    <div class="tabs" role="tablist" aria-label="Information">
+      <button type="button" class="tab" role="tab" id="tabRules" aria-selected="false" aria-controls="rules">Rules</button>
+      <button type="button" class="tab" role="tab" id="tabAbout" aria-selected="false" aria-controls="about">About</button>
+      <button type="button" class="tab" role="tab" id="tabReset" aria-selected="false" aria-controls="resetPanel">Reset</button>
+    </div>
+    <div class="tabpanel" id="rules" role="tabpanel" aria-labelledby="tabRules" hidden>
+      <ol>
+        <li>A car is behind one of three doors. Goats are behind the other two.</li>
+        <li>Pick a door.</li>
+        <li>The host opens one door without the car.</li>
+        <li>Stay with your door or switch to the other closed one.</li>
+        <li>Find the car and you win.</li>
+      </ol>
+    </div>
+    <div class="tabpanel" id="about" role="tabpanel" aria-labelledby="tabAbout" hidden>
+      <p>The puzzle takes its name from Monty Hall, host of the US game show Let's Make a Deal, where contestants chose between doors with prizes behind them. It became famous in 1990 when a reader put the question to Marilyn vos Savant, who answered a weekly puzzle column in Parade magazine. Her answer drew around ten thousand letters, close to a thousand from people with PhDs, most telling her she was wrong. She asked schools to play the game in class and send in the tallies, and the tallies settled the argument. Play, then decide who was right.</p>
+      <p class="aux">Stats are stored only in this browser.</p>
+    </div>
+    <div class="tabpanel" id="resetPanel" role="tabpanel" aria-labelledby="tabReset" hidden>
+      <p>Clears every hand-played and simulated round.</p>
+      <div class="row"><button type="button" class="btn primary" id="resetYes">Clear everything</button><button type="button" class="btn" id="resetNo">Keep them</button></div>
+    </div>
   </div>
 </header>
 
@@ -418,11 +424,11 @@ footer>:first-child{justify-self:start} footer>:nth-child(2){justify-self:center
 
   const panels={tabRules:'rules',tabAbout:'about',tabReset:'resetPanel'};
   function showPanel(which){
-    Object.keys(panels).forEach(k=>{ $(k).setAttribute('aria-pressed',String(k===which)); $(panels[k]).hidden=(k!==which); });
+    Object.keys(panels).forEach(k=>{ $(k).setAttribute('aria-selected',String(k===which)); $(panels[k]).hidden=(k!==which); });
   }
-  Object.keys(panels).forEach(k=>$(k).addEventListener('click',()=>showPanel(k)));
-  $('resetNo').addEventListener('click',()=>showPanel('tabRules'));
-  $('resetYes').addEventListener('click',()=>{ stats={stayW:0,stayL:0,switchW:0,switchL:0}; saveStats(); renderStats(); clearSim(); showPanel('tabRules'); });
+  Object.keys(panels).forEach(k=>$(k).addEventListener('click',()=>showPanel($(k).getAttribute('aria-selected')==='true'?null:k)));
+  $('resetNo').addEventListener('click',()=>showPanel(null));
+  $('resetYes').addEventListener('click',()=>{ stats={stayW:0,stayL:0,switchW:0,switchL:0}; saveStats(); renderStats(); clearSim(); showPanel(null); });
 
   const blank=()=>({stay:[],sw:[],stayW:0,swW:0});
   let sim={knows:blank(),random:blank()};
