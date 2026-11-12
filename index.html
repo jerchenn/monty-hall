@@ -248,10 +248,10 @@ footer .orn{color:var(--butter);letter-spacing:.5em;padding-left:.5em}
 
 <section class="frame butter" aria-label="Bulk simulation">
   <span class="sign">Let the machine play</span>
-  <p class="aux">Choose the host's rule and run the rounds. The chart tracks the cumulative win rate for each strategy under each rule.</p>
+  <p class="aux">Choose the host's rule and run the rounds. A host who does not know will sometimes open the car by accident; those rounds are thrown out, so both hosts are compared on rounds in which a goat was shown. The chart tracks the cumulative win rate for each strategy under each rule.</p>
   <div class="row">
     <label for="hostRule">Host</label>
-    <select id="hostRule"><option value="knows" selected>Knows the car, never opens it</option><option value="random">Opens at random; rounds that reveal the car are discarded</option></select>
+    <select id="hostRule"><option value="knows" selected>Knows the car, never opens it</option><option value="random">Does not know, opens one of the other doors at random</option></select>
     <label for="nRounds">Rounds</label>
     <select id="nRounds"><option>100</option><option selected>1000</option><option>10000</option><option>100000</option></select>
     <button type="button" class="btn primary" id="btnSim">Run</button>
