@@ -169,6 +169,12 @@ footer{margin-top:34px;margin-inline:-16px;background:var(--text);color:var(--ne
 footer .orn{color:var(--butter);letter-spacing:.5em;padding-left:.5em}
 
 @media (prefers-reduced-motion:reduce){.door .leaf,.bar i{transition:none}}
+
+/* slide scrolling: each block is a snap target, arrow keys move between blocks, a counter shows the position */
+html{scroll-snap-type:y proximity;scroll-padding-top:16px}
+.wrap>header.frame,.wrap>section.frame{scroll-snap-align:start;scroll-margin-top:16px;min-height:calc(100vh - 56px);align-content:center}
+.counter{position:fixed;right:16px;bottom:16px;z-index:9;font-family:var(--mono);font-size:11px;letter-spacing:.2em;padding:6px 12px;border:1px solid var(--trim);border-radius:999px;background:var(--label-bg);color:var(--rose)}
+@media (max-width:560px){.wrap>header.frame,.wrap>section.frame{min-height:0}}
 </style>
 
 <div class="wrap">
@@ -549,6 +555,22 @@ footer .orn{color:var(--butter);letter-spacing:.5em;padding-left:.5em}
   hReset();
 
   renderStats(); renderSim(); newRound();
+})();
+</script>
+
+<script>
+(function(){
+  const blocks=[...document.querySelectorAll('.wrap>header.frame, .wrap>section.frame')];
+  if(!blocks.length) return;
+  const c=document.createElement('div'); c.className='counter'; c.setAttribute('aria-live','polite'); document.body.appendChild(c);
+  const current=()=>{ let best=0,bd=1e9; blocks.forEach((b,i)=>{ const d=Math.abs(b.getBoundingClientRect().top-16); if(d<bd){bd=d;best=i;} }); return best; };
+  const show=()=>{ c.textContent=(current()+1)+' / '+blocks.length; };
+  const go=i=>{ i=Math.max(0,Math.min(blocks.length-1,i)); blocks[i].scrollIntoView({behavior:'smooth',block:'start'}); };
+  document.addEventListener('keydown',e=>{ const t=e.target; if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT')) return;
+    if(e.key==='ArrowDown'||e.key==='PageDown'||e.key===' '||e.key==='ArrowRight'){ e.preventDefault(); go(current()+1); }
+    else if(e.key==='ArrowUp'||e.key==='PageUp'||e.key==='ArrowLeft'){ e.preventDefault(); go(current()-1); }
+    else if(e.key==='Home'){ e.preventDefault(); go(0); } else if(e.key==='End'){ e.preventDefault(); go(blocks.length-1); } });
+  document.addEventListener('scroll',show,{passive:true}); show();
 })();
 </script>
 </body>
